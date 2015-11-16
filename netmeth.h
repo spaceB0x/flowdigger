@@ -90,14 +90,14 @@ void decode_ethernet(const u_char *header_start) {
 /* Decode IP */
 void decode_ip(const u_char *header_start, u_char *nfbody) {
    const struct ip_hdr *ip_header;
-
+   struct nf_v5_body *nf_body;
    // Set local variables
    ip_header = (const struct ip_hdr *)header_start;
    nf_body = (struct nf_v5_body *)nfbody;
 
    printf("\tDecoding IP layer\n");
-   nf_body->ip_src_address = ip_header->ip_src; //assign source IP
-   nf_body->ip_dst_address = ip_header->ip_dst; //assign destination IP
+   nf_body->ip_src_address = ip_header->src; //assign source IP
+   nf_body->ip_dst_address = ip_header->dst; //assign destination IP
    nf_body->dOctets = ip_header->tl;            // assign bytes of flow
    nf_body->prot = ip_header->prot;             //assign protocol
 };
@@ -112,7 +112,7 @@ u_int decode_tcp(const u_char *header_start,u_char *nfbody) {
    tcp_header = (const struct tcp_hdr *)header_start;
    nf_body = (struct nf_v5_body *)nfbody;
    flags = EMPTY_FLAGS;
-   header_size = 4 * tcp_header->tcp_offset;
+   header_size = 4 * tcp_header->off;
 
    printf("\tDecoding TCP....\n");
    nf_body->sport = tcp_header->sport; //assign source port
