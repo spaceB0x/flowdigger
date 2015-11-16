@@ -28,7 +28,7 @@ int main(){
 
 
   /* Choose sniffing device */
-  device = pcap_lookupdev(errbuf);
+  device = "eth1"; //pcap_lookupdev(errbuf);
   if(device == NULL)
     pcap_fatal("pcap_lookupdev", errbuf);
 
