@@ -46,12 +46,8 @@ struct nf_v5_body{
     unsigned short pad2;                  /* Unused (zero) bytes */
 };
 
-
 /* Netflow v9 packet structure */
-
-
-
-
+        //Coming soon
 
 /* ---------- Transport functions ---------- */
 
@@ -79,34 +75,4 @@ int send_nf5_body(int fd, struct nf_v5_body *body){
         bytes_to_send -= sent_bytes;
     }
     return 1;                               //return 1 on success
-};
-
-/* pcap fatal error handler */
-void pcap_fatal(const char *failed_in, const char *errbuf){
-    printf("Fatal error in %s: %s\n",failed_in, errbuf);
-    exit(1);
-
-};
-
-/* Method to dump raw pcap data (Stolen from Jon Erikson) */
-void dump(const unsigned char *data_buffer, const unsigned int length) {
-   unsigned char byte;
-   unsigned int i, j;
-   for(i=0; i < length; i++) {
-      byte = data_buffer[i];
-      printf("%02x ", data_buffer[i]);  // Display byte in hex.
-      if(((i%16)==15) || (i==length-1)) {
-         for(j=0; j < 15-(i%16); j++)
-            printf("   ");
-         printf("| ");
-         for(j=(i-(i%16)); j <= i; j++) {  // Display printable bytes from line.
-            byte = data_buffer[j];
-            if((byte > 31) && (byte < 127)) // Outside printable char range
-               printf("%c", byte);
-            else
-               printf(".");
-         }
-         printf("\n"); // End of the dump line (each line is 16 bytes)
-      } // End if
-   } // End for
 };
