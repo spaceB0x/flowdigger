@@ -37,7 +37,7 @@ int main(){
   pcap_handle=pcap_open_live(device, 4096, 0, 0, errbuf);
 
   /* Start sniffing */
-  for (x=0; x < 3; x++){
+  for (x=0; x < 20; x++){
     packet = pcap_next(pcap_handle, &header);
     printf("Received a %d byte packet\n", header.len);
     dump(packet,header.len);
