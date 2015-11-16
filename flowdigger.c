@@ -34,7 +34,7 @@ int main(){
 
   printf("Sniffing network traffic on device %s \n", device);
 
-  pcap_handle=pcap_open_live(device, 4096, 0, 0, errbuf);
+  pcap_handle=pcap_open_live(device, 4096, 1, 0, errbuf);
 
   /* Start sniffing */
   for (x=0; x < 20; x++){
