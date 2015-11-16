@@ -1,7 +1,5 @@
 
 /* File of networking methods */
-#include "nflow.h"
-
 #define ETHER_ADDR_LEN 6
 #define ETHER_HDR_LEN 14
 #define EMPTY_FLAGS 0x00
@@ -79,60 +77,4 @@ void dump(const unsigned char *data_buffer, const unsigned int length) {
            printf("\n"); // End of the dump line (each line is 16 bytes)
         } // End if
      } // End for
-};
-
-
-/* --- Protocol Decoding functions --- */
-/* Decode Ethernet */
-void decode_ethernet(const u_char *header_start) {
-   printf("Successfully decoded ethr_hdr\n");
-};
-
-/* Decode IP */
-void decode_ip(const u_char *header_start, u_char *nfbody) {
-   const struct ip_hdr *ip_header;
-   struct nf_v5_body *nf_body;
-   // Set local variables
-   ip_header = (const struct ip_hdr *)header_start;
-   nf_body = (struct nf_v5_body *)nfbody;
-
-   printf("\tDecoding IP layer\n");
-   nf_body->ip_src_address = ip_header->src; //assign source IP
-   nf_body->ip_dst_address = ip_header->dst; //assign destination IP
-   nf_body->dOctets = ip_header->tl;            // assign bytes of flow
-   nf_body->prot = ip_header->prot;             //assign protocol
-};
-
-/* Decode TCP */
-u_int decode_tcp(const u_char *header_start,u_char *nfbody) {
-   u_int header_size;
-   const struct tcp_hdr *tcp_header;
-   unsigned char flags;
-
-   // Set local variables
-   tcp_header = (const struct tcp_hdr *)header_start;
-   nf_body = (struct nf_v5_body *)nfbody;
-   flags = EMPTY_FLAGS;
-   header_size = 4 * tcp_header->off;
-
-   printf("\tDecoding TCP....\n");
-   nf_body->sport = tcp_header->sport; //assign source port
-   nf_body->dport = tcp_header->dport; //assign destination port
-
-   if(tcp_header->tcp_flags & TCP_FIN)
-      flags |= TCP_FIN
-   if(tcp_header->tcp_flags & TCP_SYN)
-      flags |= TCP_SYN
-   if(tcp_header->tcp_flags & TCP_RST)
-      flags |= TCP_RST
-   if(tcp_header->tcp_flags & TCP_PUSH)
-      flags |= TCP_PUSH
-   if(tcp_header->tcp_flags & TCP_ACK)
-      flags |= TCP_ACK
-   if(tcp_header->tcp_flags & TCP_URG)
-      flags |= TCP_URG
-
-   nf_body->tcp_flags = flags;    //assign OR of TCP flags
-
-   return header_size;
 };
