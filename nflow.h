@@ -7,6 +7,7 @@
 #include <netinet/ip.h>
 #include <netinet/udp.h>
 #include <stdio.h>
+#include "netmeth.h"
 
 /* Netflow v5 packet structure */
 
@@ -51,6 +52,7 @@ struct nf_v5_body{
 
 /* ---------- Transport functions ---------- */
 
+
 /* Send netflow 5 header.*/
 int send_nf5_header(int fd, struct nf_v5_header *header){
     int sent_bytes, bytes_to_send;
@@ -64,6 +66,7 @@ int send_nf5_header(int fd, struct nf_v5_header *header){
     return 1;                               //return 1 on success
 };
 
+
 /* Send netflow 5 body */
 int send_nf5_body(int fd, struct nf_v5_body *body){
     int sent_bytes, bytes_to_send;
@@ -76,3 +79,11 @@ int send_nf5_body(int fd, struct nf_v5_body *body){
     }
     return 1;                               //return 1 on success
 };
+
+
+/* Package function -- Repackages pcap stats as netflow stats */
+int package(u_char *nfbody, const struct pcap_pkthdr *cap_header, const u_char *packet){
+    int tcp_header, total_header_size, pkt_data_len;
+    
+
+}

@@ -19,12 +19,20 @@
 
 int main(){
   /* Initiate packet sniffing values/types/structs */
-  struct pcap_pkthdr header;
-  const u_char *packet;
+  struct pcap_pkthdr header;      //actual pcap struct
+  struct nf_v5_header nfheader;   //netflow header struct
+  struct nf_v5_header *p_nfheader; //pointer to header
+  struct nf_v5_body nfbody;       //netflow body struct
+  struct nf_v5_body *p_nfbody;    //pointer to body
+
+  p_nfheader = &nfheader;
+  p_nfbody = &nfbody;
+
+  const u_char *packet;           // pointer to the packet
   char errbuf[PCAP_ERRBUF_SIZE];
   char *device;
-  pcap_t *pcap_handle;
-  int x;
+  pcap_t *pcap_handle;            //name of packet
+
 
   /* Initialize output binding values/types/structs */
 
@@ -37,13 +45,12 @@ int main(){
   printf("Sniffing network traffic on device %s \n", device);
 
   pcap_handle=pcap_open_live(device, 4096, 1, 0, errbuf);
+  if (pcap_handle == NULL){
+      pcap_fatal("pcap_open_live", errbuf);
+    }
 
-  /* Start sniffing */
-  for (x=0; x < 20; x++){
-    packet = pcap_next(pcap_handle, &header);
-    printf("Received a %d byte packet\n", header.len);
-    dump(packet,header.len);
-  }
+  pcap_loop(pcap_handle, 20, package, ((u_char *)p_nfbody));
+
   pcap_close(pcap_handle);
 
 }
