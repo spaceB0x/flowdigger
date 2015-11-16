@@ -21,7 +21,7 @@ struct nf_v5_header{
     unsigned char engine_id;            /* Slot number of the flow switching engine */
     unsigned short sampling_interval;   /* First two bits hold the sampling mode; remaining 14 bits hold value of sampling interval */
 
-}
+};
 
 struct nf_v5_body{
     unsigned int ip_src_address;          /* Source IP */
@@ -44,7 +44,46 @@ struct nf_v5_body{
     unsigned char src_mask;               /* Source address prefix mask bits */
     unsigned char dst_mask;               /* Destination address prefix mask bits */
     unsigned short pad2;                  /* Unused (zero) bytes */
-}
+};
 
 
 /* Netflow v9 packet structure */
+
+
+
+
+
+/* ---------- Transport functions ---------- */
+
+/* Send netflow 5 header.*/
+int send_nf5_header(int fd, struct nf_v5_header *header){
+    int sent_bytes, bytes_to_send;
+    bytes_to_send = sizeof(header);
+    while(bytes_to_send > 0){
+        sent_bytes= send(fd, header, bytes_to_send, 0);
+        if(sent_bytes == -1)
+          return 0;                         //returns 0 on error
+        bytes_to_send -= sent_bytes;
+    }
+    return 1;                               //return 1 on success
+};
+
+/* Send netflow 5 body */
+int send_nf5_body(int fd, struct nf_v5_body *body){
+    int sent_bytes, bytes_to_send;
+    bytes_to_send = sizeof(body);
+    while(bytes_to_send > 0){
+        sent_bytes= send(fd, body, bytes_to_send, 0);
+        if(sent_bytes == -1)
+          return 0;                         //returns 0 on error
+        bytes_to_send -= sent_bytes;
+    }
+    return 1;                               //return 1 on success
+};
+
+/* pcap fatal error handler */
+void pcap_fatal(const char *failed_in, const char *errbuf){
+    printf("Fatal error in %s: %s\n",failed_in, errbuf);
+    exit(1);
+
+};
