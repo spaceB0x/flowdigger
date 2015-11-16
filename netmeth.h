@@ -1,5 +1,6 @@
 
 /* File of networking methods */
+#include "nflow.h"
 
 #define ETHER_ADDR_LEN 6
 #define ETHER_HDR_LEN 14
