@@ -45,7 +45,7 @@ int main(){
     printNflowPacket(p_nfbody);
 
     /* Choose sniffing device */
-    device = "eth1"; //pcap_lookupdev(errbuf);
+    device = pcap_lookupdev(errbuf);
     if(device == NULL)
       pcap_fatal("pcap_lookupdev", errbuf);
     printf("Sniffing network traffic on device %s \n", device);
