@@ -79,28 +79,11 @@ int send_nf5_body(int fd, struct nf_v5_body *body){
     }
     return 1;                               //return 1 on success
 };
+
 void initializeNflowPacket(struct nf_v5_body *nfpacket){
-      nfpacket->ip_src_address = 000000000;
-      nfpacket->ip_dst_address = 000000000;
-      nfpacket->next_hop_ip =0;
-      nfpacket->in_snmp = 0;
-      nfpacket->out_snmp = 0;
-      nfpacket->dPkts = 0;
-      nfpacket->dOctets = 0;
-      nfpacket->first =0;
-      nfpacket->last = 0;
-      nfpacket->sport = 0;
-      nfpacket->dport =0;
-      nfpacket->pad1 = 0;
-      nfpacket->tcp_flags =0;
-      nfpacket->prot = 0;
-      nfpacket->tos = 0;
-      nfpacket->src_as = 0;
-      nfpacket->dst_as = 0;
-      nfpacket->src_mask = 0;
-      nfpacket->dst_mask = 0;
-      nfpacket->pad2 = 0;
+      memset(nfpacket, '\0', sizeof(struct nf_v5_body));
 };
+
 void printNflowPacket(struct nf_v5_body *nfpacket){
       printf("\t\t*** ip_src_address: %u \n",nfpacket->ip_src_address);
       printf("\t\t*** ip_dst_address: %d\n",nfpacket->ip_dst_address);
