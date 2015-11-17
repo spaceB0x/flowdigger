@@ -79,3 +79,49 @@ int send_nf5_body(int fd, struct nf_v5_body *body){
     }
     return 1;                               //return 1 on success
 };
+void initializeNflowPacket(struct nf_v5_body *nfpacket){
+      nfpacket->ip_src_address = 000000000;
+      nfpacket->ip_dst_address = 000000000;
+      nfpacket->next_hop_ip =0;
+      nfpacket->in_snmp = 0;
+      nfpacket->out_snmp = 0;
+      nfpacket->dPkts = 0;
+      nfpacket->dOctets = 0;
+      nfpacket->first =0;
+      nfpacket->last = 0;
+      nfpacket->sport = 0;
+      nfpacket->dport =0;
+      nfpacket->pad1 = 0;
+      nfpacket->tcp_flags =0;
+      nfpacket->prot = 0;
+      nfpacket->tos = 0;
+      nfpacket->src_as = 0;
+      nfpacket->dst_as = 0;
+      nfpacket->src_mask = 0;
+      nfpacket->dst_mask = 0;
+      nfpacket->pad2 = 0;
+};
+void printNflowPacket(struct nf_v5_body *nfpacket){
+      printf("\t\t*** ip_src_address: %u \n",nfpacket->ip_src_address);
+      printf("\t\t*** ip_dst_address: %d\n",nfpacket->ip_dst_address);
+      printf("\t\t*** next_hop_ip:%d \n",nfpacket->next_hop_ip);
+      printf("\t\t*** in_snmp:%d \n",nfpacket->in_snmp);
+      printf("\t\t*** out_snmp:%d \n",nfpacket->out_snmp);
+      printf("\t\t*** dPkts:%d \n",nfpacket->dPkts);
+      printf("\t\t*** dOctets:%d \n",nfpacket->dOctets);
+      printf("\t\t*** first:%d \n",nfpacket->first);
+      printf("\t\t*** last:%d \n",nfpacket->last);
+      printf("\t\t*** sport:%d \n",nfpacket->sport);
+      printf("\t\t*** dport:%d \n",nfpacket->dport);
+      printf("\t\t*** pad1:%d \n",nfpacket->pad1);
+      printf("\t\t*** tcp_flags:%d \n",nfpacket->tcp_flags);
+      printf("\t\t*** prot:%d \n",nfpacket->prot);
+      printf("\t\t*** tos:%d \n",nfpacket->tos);
+      printf("\t\t*** src_as:%d \n",nfpacket->src_as);
+      printf("\t\t*** dst_as:%d \n",nfpacket->dst_as);
+      printf("\t\t*** src_mask:%d \n",nfpacket->src_mask);
+      printf("\t\t*** dst_mask:%d \n",nfpacket->dst_mask);
+      printf("\t\t*** pad2:%d \n",nfpacket->pad2);
+
+
+};

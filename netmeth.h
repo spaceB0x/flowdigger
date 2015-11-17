@@ -37,7 +37,7 @@ struct tcp_hdr{
     unsigned char tcp_flags;                  // TCP Flags and 2 bits from reserved space.
   #define TCP_FIN 0x01
   #define TCP_SYN 0x02
-  #define TCP_RST 0x04                        /* TCP FLAGS */
+  #define TCP_RST 0x04                       /* TCP FLAGS */
   #define TCP_PUSH 0x08
   #define TCP_ACK 0x10
   #define TCP_URG 0x20
@@ -52,11 +52,9 @@ struct tcp_hdr{
 void pcap_fatal(const char *failed_in, const char *errbuf){
     printf("Fatal error in %s: %s\n",failed_in, errbuf);
     exit(1);
-
 };
 
-
-/* Method to dump raw pcap data (Stolen from Jon Erikson) */
+/* Method to dump raw pcap data (Stolen from Jon Erikson). Used for testing */
 void dump(const unsigned char *data_buffer, const unsigned int length) {
      unsigned char byte;
      unsigned int i, j;
