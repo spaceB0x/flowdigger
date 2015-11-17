@@ -45,14 +45,14 @@ int main(){
     printNflowPacket(p_nfbody);
 
     /* Choose sniffing device */
-    device = "en0"; //pcap_lookupdev(errbuf);
+    device = "eth1"; //pcap_lookupdev(errbuf);
     if(device == NULL)
       pcap_fatal("pcap_lookupdev", errbuf);
     printf("Sniffing network traffic on device %s \n", device);
 
     /* Initialize output binding values/types/structs */
     int sockfd;
-    unsigned short port = 8000;
+    unsigned short port = 18001;
     struct sockaddr_in target;  //socket adress struct
     unsigned char buffer[4096];
 
@@ -61,7 +61,7 @@ int main(){
           printf("**Error, fatal: establishing socket");
     target.sin_family= AF_INET;
     target.sin_port = htons(port);
-    inet_pton(AF_INET, "127.0.0.1", &(target.sin_addr));  //convert to network and assign IP
+    inet_pton(AF_INET, "10.209.104.214", &(target.sin_addr));  //convert to network and assign IP
     memset(&(target.sin_zero), '\0', 8); // Zero the rest of the struct.
     struct configStruct cf = { &sockfd, (u_char *)p_nfbody};
 
