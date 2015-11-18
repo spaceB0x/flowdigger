@@ -58,7 +58,7 @@ int main(){
     initializeNflowPacketBody(p_nfbody);
 
     /* Choose sniffing device */
-    device = "eth1";//pcap_lookupdev(errbuf);
+    device = "en0";//pcap_lookupdev(errbuf);
     if(device == NULL)
       pcap_fatal("pcap_lookupdev", errbuf);
     printf("Sniffing network traffic on device %s \n", device);
@@ -84,7 +84,7 @@ int main(){
     pcap_handle=pcap_open_live(device, 4096, 1, 0, errbuf);
     if (pcap_handle == NULL)
         pcap_fatal("pcap_open_live", errbuf);
-    pcap_loop(pcap_handle, 100, package, (u_char *)&cf);
+    pcap_loop(pcap_handle, -1, package, (u_char *)&cf);
     pcap_close(pcap_handle);
 
     //printf("Header pointer: %p  and Body pointer: %p \n",p_nfheader, p_nfbody);
