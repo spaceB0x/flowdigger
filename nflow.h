@@ -80,12 +80,27 @@ int send_nf5_body(int fd, struct nf_v5_body *body){
     return 1;                               //return 1 on success
 };
 
-void initializeNflowPacket(struct nf_v5_body *nfpacket){
+void initializeNflowPacketHeader(struct nf_v5_header *nfpacketh){
+      memset(nfpacketh, '\0', sizeof(struct nf_v5_header));
+};
+
+void initializeNflowPacketBody(struct nf_v5_body *nfpacket){
       memset(nfpacket, '\0', sizeof(struct nf_v5_body));
 };
 
-void printNflowPacket(struct nf_v5_body *nfpacket){
-      printf("\t\t*** ip_src_address: %u \n",nfpacket->ip_src_address);
+void printNflowPacketHeader(struct nf_v5_header *nfpacket){
+      printf("\t\t*** version: %d \n",nfpacket->version);
+      printf("\t\t*** count: %d \n",nfpacket->count);
+      printf("\t\t*** sys_uptime: %d \n",nfpacket->sys_uptime);
+      printf("\t\t*** unix_secs: %d \n",nfpacket->unix_secs);
+      printf("\t\t*** unix_nsecs: %d \n",nfpacket->unix_nsecs);
+      printf("\t\t*** flow_sequence: %d \n",nfpacket->flow_sequence);
+      printf("\t\t*** engine_type: %d \n",nfpacket->engine_type);
+      printf("\t\t*** engine_id: %d \n",nfpacket->engine_id);
+      printf("\t\t*** sampling_interval: %d \n",nfpacket->sampling_interval);
+};
+void printNflowPacketBody(struct nf_v5_body *nfpacket){
+      printf("\t\t*** ip_src_address: %d \n",nfpacket->ip_src_address);
       printf("\t\t*** ip_dst_address: %d\n",nfpacket->ip_dst_address);
       printf("\t\t*** next_hop_ip:%d \n",nfpacket->next_hop_ip);
       printf("\t\t*** in_snmp:%d \n",nfpacket->in_snmp);
@@ -105,6 +120,4 @@ void printNflowPacket(struct nf_v5_body *nfpacket){
       printf("\t\t*** src_mask:%d \n",nfpacket->src_mask);
       printf("\t\t*** dst_mask:%d \n",nfpacket->dst_mask);
       printf("\t\t*** pad2:%d \n",nfpacket->pad2);
-
-
 };

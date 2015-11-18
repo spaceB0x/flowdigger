@@ -35,17 +35,19 @@ int main(){
     struct nf_v5_header *p_nfheader; //pointer to header
     struct nf_v5_body nfbody;       //netflow body struct
     struct nf_v5_body *p_nfbody;    //pointer to body
-    const u_char *packet;           // pointer to the packet
     char errbuf[PCAP_ERRBUF_SIZE];
     char *device;
+    const u_char *packet;           // pointer to the packet
     pcap_t *pcap_handle;            //name of packet
+
     p_nfheader = &nfheader;
     p_nfbody = &nfbody;
-    initializeNflowPacket(p_nfbody);
-    printNflowPacket(p_nfbody);
+
+    initializeNflowPacketHeader(p_nfheader);
+    initializeNflowPacketBody(p_nfbody);
 
     /* Choose sniffing device */
-    device = pcap_lookupdev(errbuf);
+    device = "en0";//pcap_lookupdev(errbuf);
     if(device == NULL)
       pcap_fatal("pcap_lookupdev", errbuf);
     printf("Sniffing network traffic on device %s \n", device);
@@ -58,13 +60,14 @@ int main(){
 
     /* Establish remote connection */
     if((sockfd = socket(AF_INET, SOCK_DGRAM, 0))==-1)       //create socket
-          printf("**Error, fatal: establishing socket");
+          printf("**Error, fatal: establishing socket\n");
     target.sin_family= AF_INET;
     target.sin_port = htons(port);
     inet_pton(AF_INET, "10.209.104.214", &(target.sin_addr));  //convert to network and assign IP
     memset(&(target.sin_zero), '\0', 8); // Zero the rest of the struct.
     struct configStruct cf = { &sockfd, (u_char *)p_nfbody};
-
+    if(connect(sockfd, (struct sockaddr *)&target, sizeof(struct sockaddr)) == -1)
+        printf("**Error, fatal: establishing socket connection.\n");
 
     /* Primary capturing piece */
     pcap_handle=pcap_open_live(device, 4096, 1, 0, errbuf);
@@ -143,13 +146,18 @@ void package(u_char *conf, const struct pcap_pkthdr *cap_header, const u_char *p
       u_char *body =c->pktpntr;
       struct nf_v5_body *nfb = (struct nf_v5_body *)body; //pointer to the global netflow body
 
+
       printf("Captured a %d byte packet\n", cap_header->len);
       decode_ethernet(packet);
       decode_ip(packet+ETHER_HDR_LEN, nfb);
       tcp_header_length = decode_tcp(packet+ETHER_HDR_LEN+sizeof(struct ip_hdr), nfb);
       total_header_size = ETHER_HDR_LEN + sizeof(struct ip_hdr);
-      printNflowPacket(nfb);
+      printNflowPacketBody(nfb);
 
+      /* Sending Packets */
+
+      // Sending Header
+      //Sending Body
       printf("Sending Network Traffic....\n");
       if((sendrtrn = send_nf5_body(*fd, nfb)) == 0)
           printf("Fatal error with send_nf5_body.\n");
