@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <pcap.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -17,6 +18,7 @@
 struct configStruct{
     int *fd;
     u_char *pktpntr;
+    u_char *pktpntrhead;
 };
 
 /* method declarations */
@@ -31,19 +33,20 @@ void package(u_char *conf, const struct pcap_pkthdr *, const u_char *);
 int main(){
     /* Initiate packet sniffing values/types/structs */
     struct pcap_pkthdr header;      //actual pcap struct
-    struct nf_v5_header nfheader;   //netflow header struct
-    struct nf_v5_header *p_nfheader; //pointer to header
     struct nf_v5_body nfbody;       //netflow body struct
+    struct nf_v5_header nfheader;   //netflow header struct
     struct nf_v5_body *p_nfbody;    //pointer to body
+    struct nf_v5_header *p_nfheader; //pointer to header
     char errbuf[PCAP_ERRBUF_SIZE];
     char *device;
     const u_char *packet;           // pointer to the packet
     pcap_t *pcap_handle;            //name of packet
+    int tm = getepoch();
 
     p_nfheader = &nfheader;
     p_nfbody = &nfbody;
 
-    initializeNflowPacketHeader(p_nfheader);
+    initializeNflowPacketHeader(p_nfheader,tm);
     initializeNflowPacketBody(p_nfbody);
 
     /* Choose sniffing device */
@@ -65,7 +68,7 @@ int main(){
     target.sin_port = htons(port);
     inet_pton(AF_INET, "10.209.104.214", &(target.sin_addr));  //convert to network and assign IP
     memset(&(target.sin_zero), '\0', 8); // Zero the rest of the struct.
-    struct configStruct cf = { &sockfd, (u_char *)p_nfbody};
+    struct configStruct cf = { &sockfd, (u_char *)p_nfbody, (u_char *)p_nfheader};
     if(connect(sockfd, (struct sockaddr *)&target, sizeof(struct sockaddr)) == -1)
         printf("**Error, fatal: establishing socket connection.\n");
 
@@ -75,6 +78,8 @@ int main(){
         pcap_fatal("pcap_open_live", errbuf);
     pcap_loop(pcap_handle, 20, package, (u_char *)&cf);
     pcap_close(pcap_handle);
+
+    //printf("Header pointer: %p  and Body pointer: %p \n",p_nfheader, p_nfbody);
 
 };
 
@@ -113,11 +118,11 @@ u_int decode_tcp(const u_char *header_start,struct nf_v5_body *nfbody) {
      nf_body = (struct nf_v5_body *)nfbody;
      flags = EMPTY_FLAGS;
      header_size = 4 * tcp_header->off;
-
-     printf("\t\tDecoding TCP layer....\n\n");
+     printf("\t\tDecoding TCP layer....\n");
      nf_body->sport = htons(tcp_header->sport); //assign source port
      nf_body->dport = htons(tcp_header->dport); //assign destination port
 
+     //bitwise OR all TCP flags together
      if(tcp_header->tcp_flags & TCP_FIN)
         flags |= TCP_FIN;
      if(tcp_header->tcp_flags & TCP_SYN)
@@ -132,7 +137,6 @@ u_int decode_tcp(const u_char *header_start,struct nf_v5_body *nfbody) {
         flags |= TCP_URG;
 
      nf_body->tcp_flags = flags;    //assign OR of TCP flags
-
      return header_size;
 };
 
@@ -140,10 +144,12 @@ u_int decode_tcp(const u_char *header_start,struct nf_v5_body *nfbody) {
 
 void package(u_char *conf, const struct pcap_pkthdr *cap_header, const u_char *packet){
       int tcp_header_length, total_header_size, pkt_data_len;
-      int sendrtrn;
+      int sendrtrn, sendrtrnh, sendrtrnb;
       struct configStruct *c = (struct configStruct *)conf;
       int *fd = c->fd;
+      u_char *header =c->pktpntrhead;
       u_char *body =c->pktpntr;
+      struct nf_v5_header *nfh = (struct nf_v5_header *)header ; //pointer to global netflow header
       struct nf_v5_body *nfb = (struct nf_v5_body *)body; //pointer to the global netflow body
 
 
@@ -152,14 +158,21 @@ void package(u_char *conf, const struct pcap_pkthdr *cap_header, const u_char *p
       decode_ip(packet+ETHER_HDR_LEN, nfb);
       tcp_header_length = decode_tcp(packet+ETHER_HDR_LEN+sizeof(struct ip_hdr), nfb);
       total_header_size = ETHER_HDR_LEN + sizeof(struct ip_hdr);
+
+      printNflowPacketHeader(nfh);
       printNflowPacketBody(nfb);
 
       /* Sending Packets */
-
-      // Sending Header
-      //Sending Body
-      printf("Sending Network Traffic....\n");
+      // Header
+      printf("Sending NetFlow Header...\n");
+      if((sendrtrnh = send_nf5_header(*fd, nfh)) == 0)
+          printf("Fatal error with send_nf5_header.\n");
+      //Body
+      printf("Sending NetFlow Body...\n");
       if((sendrtrn = send_nf5_body(*fd, nfb)) == 0)
           printf("Fatal error with send_nf5_body.\n");
 
+      printf("Sending both at same time...\n");
+      if((sendrtrnb = send_nf5_both(*fd, nfh, nfb)) == 0)
+          printf("Fatal error with send_nf5_both\n");
 };

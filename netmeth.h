@@ -1,3 +1,4 @@
+#include <time.h>
 
 /* File of networking methods */
 #define ETHER_ADDR_LEN 6
@@ -76,3 +77,7 @@ void dump(const unsigned char *data_buffer, const unsigned int length) {
         } // End if
      } // End for
 };
+
+int getepoch(){
+  return (int)time(NULL);
+}

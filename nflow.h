@@ -80,8 +80,24 @@ int send_nf5_body(int fd, struct nf_v5_body *body){
     return 1;                               //return 1 on success
 };
 
-void initializeNflowPacketHeader(struct nf_v5_header *nfpacketh){
+int send_nf5_both(int fd, struct nf_v5_header *header, struct nf_v5_body *body){
+    int sent_bytes, bytes_to_send;
+    bytes_to_send = sizeof(header)+sizeof(body);
+    while(bytes_to_send > 0){
+        sent_bytes= send(fd, header, bytes_to_send, 0);
+        if(sent_bytes == -1)
+          return 0;                         //returns 0 on error
+        bytes_to_send -= sent_bytes;
+    }
+    return 1;                               //return 1 on success
+};
+
+void initializeNflowPacketHeader(struct nf_v5_header *nfpacketh, int t){
       memset(nfpacketh, '\0', sizeof(struct nf_v5_header));
+      nfpacketh->version = htons(5);
+      nfpacketh->count = htons(1);
+      nfpacketh->unix_secs = htonl(t);
+
 };
 
 void initializeNflowPacketBody(struct nf_v5_body *nfpacket){
@@ -89,10 +105,10 @@ void initializeNflowPacketBody(struct nf_v5_body *nfpacket){
 };
 
 void printNflowPacketHeader(struct nf_v5_header *nfpacket){
-      printf("\t\t*** version: %d \n",nfpacket->version);
-      printf("\t\t*** count: %d \n",nfpacket->count);
+      printf("\t\t*** version: %d \n",ntohs(nfpacket->version));
+      printf("\t\t*** count: %d \n",ntohs(nfpacket->count));
       printf("\t\t*** sys_uptime: %d \n",nfpacket->sys_uptime);
-      printf("\t\t*** unix_secs: %d \n",nfpacket->unix_secs);
+      printf("\t\t*** unix_secs: %d \n",ntohl(nfpacket->unix_secs));
       printf("\t\t*** unix_nsecs: %d \n",nfpacket->unix_nsecs);
       printf("\t\t*** flow_sequence: %d \n",nfpacket->flow_sequence);
       printf("\t\t*** engine_type: %d \n",nfpacket->engine_type);
@@ -100,17 +116,17 @@ void printNflowPacketHeader(struct nf_v5_header *nfpacket){
       printf("\t\t*** sampling_interval: %d \n",nfpacket->sampling_interval);
 };
 void printNflowPacketBody(struct nf_v5_body *nfpacket){
-      printf("\t\t*** ip_src_address: %d \n",nfpacket->ip_src_address);
-      printf("\t\t*** ip_dst_address: %d\n",nfpacket->ip_dst_address);
+      printf("\t\t*** ip_src_address: %d \n",ntohl(nfpacket->ip_src_address));
+      printf("\t\t*** ip_dst_address: %d\n",ntohl(nfpacket->ip_dst_address));
       printf("\t\t*** next_hop_ip:%d \n",nfpacket->next_hop_ip);
       printf("\t\t*** in_snmp:%d \n",nfpacket->in_snmp);
       printf("\t\t*** out_snmp:%d \n",nfpacket->out_snmp);
       printf("\t\t*** dPkts:%d \n",nfpacket->dPkts);
-      printf("\t\t*** dOctets:%d \n",nfpacket->dOctets);
+      printf("\t\t*** dOctets:%d \n",ntohl(nfpacket->dOctets));
       printf("\t\t*** first:%d \n",nfpacket->first);
       printf("\t\t*** last:%d \n",nfpacket->last);
-      printf("\t\t*** sport:%d \n",nfpacket->sport);
-      printf("\t\t*** dport:%d \n",nfpacket->dport);
+      printf("\t\t*** sport:%d \n",ntohs(nfpacket->sport));
+      printf("\t\t*** dport:%d \n",ntohs(nfpacket->dport));
       printf("\t\t*** pad1:%d \n",nfpacket->pad1);
       printf("\t\t*** tcp_flags:%d \n",nfpacket->tcp_flags);
       printf("\t\t*** prot:%d \n",nfpacket->prot);
