@@ -47,6 +47,11 @@ struct nf_v5_body{
     unsigned short pad2;                  /* Unused (zero) bytes */
 };
 
+struct nf_v5_combo{
+    struct nf_v5_header header;
+    struct nf_v5_body body;
+};
+
 /* Netflow v9 packet structure */
         //Coming soon
 
@@ -80,9 +85,10 @@ int send_nf5_body(int fd, struct nf_v5_body *body){
     return 1;                               //return 1 on success
 };
 
-int send_nf5_both(int fd, struct nf_v5_header *header, struct nf_v5_body *body){
+int send_nf5_both(int fd, struct nf_v5_header *header, struct nf_v5_body *body, struct nf_v5_combo *combo){
     int sent_bytes, bytes_to_send;
-    bytes_to_send = sizeof(header)+sizeof(body);
+
+    bytes_to_send = sizeof(struct nf_v5_combo);
     while(bytes_to_send > 0){
         sent_bytes= send(fd, header, bytes_to_send, 0);
         if(sent_bytes == -1)

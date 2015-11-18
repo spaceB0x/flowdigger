@@ -19,6 +19,7 @@ struct configStruct{
     int *fd;
     u_char *pktpntr;
     u_char *pktpntrhead;
+    u_char *pktpntrecombo;
 };
 
 /* method declarations */
@@ -35,8 +36,11 @@ int main(){
     struct pcap_pkthdr header;      //actual pcap struct
     struct nf_v5_body nfbody;       //netflow body struct
     struct nf_v5_header nfheader;   //netflow header struct
+    struct nf_v5_combo nfcombo;     //netflow combo struct
     struct nf_v5_body *p_nfbody;    //pointer to body
     struct nf_v5_header *p_nfheader; //pointer to header
+    struct nf_v5_combo *p_nfcombo;    //pointer to combo struct
+
     char errbuf[PCAP_ERRBUF_SIZE];
     char *device;
     const u_char *packet;           // pointer to the packet
@@ -45,6 +49,7 @@ int main(){
 
     p_nfheader = &nfheader;
     p_nfbody = &nfbody;
+    p_nfcombo = &nfcombo;
 
     initializeNflowPacketHeader(p_nfheader,tm);
     initializeNflowPacketBody(p_nfbody);
@@ -68,7 +73,7 @@ int main(){
     target.sin_port = htons(port);
     inet_pton(AF_INET, "10.209.104.214", &(target.sin_addr));  //convert to network and assign IP
     memset(&(target.sin_zero), '\0', 8); // Zero the rest of the struct.
-    struct configStruct cf = { &sockfd, (u_char *)p_nfbody, (u_char *)p_nfheader};
+    struct configStruct cf = { &sockfd, (u_char *)p_nfbody, (u_char *)p_nfheader, (u_char *)p_nfcombo};
     if(connect(sockfd, (struct sockaddr *)&target, sizeof(struct sockaddr)) == -1)
         printf("**Error, fatal: establishing socket connection.\n");
 
@@ -149,8 +154,10 @@ void package(u_char *conf, const struct pcap_pkthdr *cap_header, const u_char *p
       int *fd = c->fd;
       u_char *header =c->pktpntrhead;
       u_char *body =c->pktpntr;
+      u_char *combo = c->pktpntrecombo;
       struct nf_v5_header *nfh = (struct nf_v5_header *)header ; //pointer to global netflow header
       struct nf_v5_body *nfb = (struct nf_v5_body *)body; //pointer to the global netflow body
+      struct nf_v5_combo *nfc = (struct nf_v5_combo *)combo;
 
 
       printf("Captured a %d byte packet\n", cap_header->len);
@@ -164,15 +171,15 @@ void package(u_char *conf, const struct pcap_pkthdr *cap_header, const u_char *p
 
       /* Sending Packets */
       // Header
-      printf("Sending NetFlow Header...\n");
-      if((sendrtrnh = send_nf5_header(*fd, nfh)) == 0)
-          printf("Fatal error with send_nf5_header.\n");
+      //printf("Sending NetFlow Header...\n");
+      //if((sendrtrnh = send_nf5_header(*fd, nfh)) == 0)
+      //    printf("Fatal error with send_nf5_header.\n");
       //Body
-      printf("Sending NetFlow Body...\n");
-      if((sendrtrn = send_nf5_body(*fd, nfb)) == 0)
-          printf("Fatal error with send_nf5_body.\n");
+      //printf("Sending NetFlow Body...\n");
+      //if((sendrtrn = send_nf5_body(*fd, nfb)) == 0)
+      //    printf("Fatal error with send_nf5_body.\n");
 
       printf("Sending both at same time...\n");
-      if((sendrtrnb = send_nf5_both(*fd, nfh, nfb)) == 0)
+      if((sendrtrnb = send_nf5_both(*fd, nfh, nfb, nfc)) == 0)
           printf("Fatal error with send_nf5_both\n");
 };
