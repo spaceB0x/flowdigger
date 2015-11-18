@@ -58,7 +58,7 @@ int main(){
     initializeNflowPacketBody(p_nfbody);
 
     /* Choose sniffing device */
-    device = "en0";//pcap_lookupdev(errbuf);
+    device = "eth1";//pcap_lookupdev(errbuf);
     if(device == NULL)
       pcap_fatal("pcap_lookupdev", errbuf);
     printf("Sniffing network traffic on device %s \n", device);
@@ -159,7 +159,7 @@ void decode_data(const u_char *header_start, int size){
     char data[size];
     printf("bytes to read: %d", bytes_to_read);
     while(bytes_to_read > 0){
-        
+
         data[read_bytes] = *header_start;
         read_bytes -=1;
         header_start+=1;
