@@ -98,16 +98,19 @@ int send_nf5_both(int fd, struct nf_v5_header *header, struct nf_v5_body *body, 
     return 1;                               //return 1 on success
 };
 
-void initializeNflowPacketHeader(struct nf_v5_header *nfpacketh, int t){
+void initializeNflowPacketHeader(struct nf_v5_header *nfpacketh, unsigned int t){
       memset(nfpacketh, '\0', sizeof(struct nf_v5_header));
       nfpacketh->version = htons(5);
       nfpacketh->count = htons(1);
       nfpacketh->unix_secs = htonl(t);
-
+      nfpacketh->flow_sequence = htonl(1);
+      nfpacketh->engine_id= 186;
 };
 
 void initializeNflowPacketBody(struct nf_v5_body *nfpacket){
       memset(nfpacket, '\0', sizeof(struct nf_v5_body));
+      nfpacket->dPkts = htonl(1);
+      nfpacket->dOctets = htonl(60);
 };
 
 void printNflowPacketHeader(struct nf_v5_header *nfpacket){

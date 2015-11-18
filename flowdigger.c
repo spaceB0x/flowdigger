@@ -45,7 +45,7 @@ int main(){
     char *device;
     const u_char *packet;           // pointer to the packet
     pcap_t *pcap_handle;            //name of packet
-    int tm = getepoch();
+    unsigned int tm = getepoch();
 
     p_nfheader = &nfheader;
     p_nfbody = &nfbody;
@@ -78,7 +78,7 @@ int main(){
         printf("**Error, fatal: establishing socket connection.\n");
 
     /* Primary capturing piece */
-    pcap_handle=pcap_open_live(device, 4096, 1, 0, errbuf);
+    pcap_handle=pcap_open_live(device, 4096, 0, 0, errbuf);
     if (pcap_handle == NULL)
         pcap_fatal("pcap_open_live", errbuf);
     pcap_loop(pcap_handle, 20, package, (u_char *)&cf);
