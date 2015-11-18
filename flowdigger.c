@@ -20,12 +20,13 @@ struct configStruct{
     u_char *pktpntr;
     u_char *pktpntrhead;
     u_char *pktpntrecombo;
+    u_int *extractor;
 };
 
 /* method declarations */
 void decode_ethernet(const u_char *);
 void decode_ip(const u_char *, struct nf_v5_body *);
-u_int decode_tcp(const u_char *,struct nf_v5_body *);
+u_int decode_tcp(const u_char *,struct nf_v5_body *,u_int *);
 void package(u_char *conf, const struct pcap_pkthdr *, const u_char *);
 
 
@@ -41,6 +42,8 @@ int main(){
     struct nf_v5_header *p_nfheader; //pointer to header
     struct nf_v5_combo *p_nfcombo;    //pointer to combo struct
 
+    int capsize;
+    u_int extractor=1;
     char errbuf[PCAP_ERRBUF_SIZE];
     char *device;
     const u_char *packet;           // pointer to the packet
@@ -73,12 +76,12 @@ int main(){
     target.sin_port = htons(port);
     inet_pton(AF_INET, "10.209.104.214", &(target.sin_addr));  //convert to network and assign IP
     memset(&(target.sin_zero), '\0', 8); // Zero the rest of the struct.
-    struct configStruct cf = { &sockfd, (u_char *)p_nfbody, (u_char *)p_nfheader, (u_char *)p_nfcombo};
+    struct configStruct cf = { &sockfd, (u_char *)p_nfbody, (u_char *)p_nfheader, (u_char *)p_nfcombo, &extractor};
     if(connect(sockfd, (struct sockaddr *)&target, sizeof(struct sockaddr)) == -1)
         printf("**Error, fatal: establishing socket connection.\n");
 
     /* Primary capturing piece */
-    pcap_handle=pcap_open_live(device, 4096, 0, 0, errbuf);
+    pcap_handle=pcap_open_live(device, 4096, 1, 0, errbuf);
     if (pcap_handle == NULL)
         pcap_fatal("pcap_open_live", errbuf);
     pcap_loop(pcap_handle, 20, package, (u_char *)&cf);
@@ -112,7 +115,7 @@ void decode_ip(const u_char *header_start, struct nf_v5_body *nfbody) {
   };
 
 /* Decode TCP */
-u_int decode_tcp(const u_char *header_start,struct nf_v5_body *nfbody) {
+u_int decode_tcp(const u_char *header_start,struct nf_v5_body *nfbody, u_int *extractor) {
      u_int header_size;
      const struct tcp_hdr *tcp_header;
      struct nf_v5_body *nf_body;
@@ -145,6 +148,27 @@ u_int decode_tcp(const u_char *header_start,struct nf_v5_body *nfbody) {
      return header_size;
 };
 
+void decode_data(const u_char *header_start, int size){
+    char *xstring = "X-Forwarded-For:" ;
+    char *string;
+
+    printf("\t\t\tDecoding data payload....\n");
+    int bytes_to_read, read_bytes;
+    read_bytes=0;
+    bytes_to_read = size;
+    char data[size];
+    printf("bytes to read: %d", bytes_to_read);
+    while(bytes_to_read > 0){
+        
+        data[read_bytes] = *header_start;
+        read_bytes -=1;
+        header_start+=1;
+        bytes_to_read -= 1;
+
+    }
+    printf("\n");
+}
+
 /* Package function -- Repackages pcap stats as netflow stats */
 
 void package(u_char *conf, const struct pcap_pkthdr *cap_header, const u_char *packet){
@@ -155,6 +179,7 @@ void package(u_char *conf, const struct pcap_pkthdr *cap_header, const u_char *p
       u_char *header =c->pktpntrhead;
       u_char *body =c->pktpntr;
       u_char *combo = c->pktpntrecombo;
+      u_int *extractor = c->extractor;
       struct nf_v5_header *nfh = (struct nf_v5_header *)header ; //pointer to global netflow header
       struct nf_v5_body *nfb = (struct nf_v5_body *)body; //pointer to the global netflow body
       struct nf_v5_combo *nfc = (struct nf_v5_combo *)combo;
@@ -163,8 +188,13 @@ void package(u_char *conf, const struct pcap_pkthdr *cap_header, const u_char *p
       printf("Captured a %d byte packet\n", cap_header->len);
       decode_ethernet(packet);
       decode_ip(packet+ETHER_HDR_LEN, nfb);
-      tcp_header_length = decode_tcp(packet+ETHER_HDR_LEN+sizeof(struct ip_hdr), nfb);
+      tcp_header_length = decode_tcp(packet+ETHER_HDR_LEN+sizeof(struct ip_hdr), nfb, extractor);
       total_header_size = ETHER_HDR_LEN + sizeof(struct ip_hdr);
+
+      //For now always extract body
+       //if(*extractor == 1 && (ntohs(nfb->dport) == (short)80 || ntohs(nfb->dport) == (short)443)){
+      int datasize = cap_header->len;
+      decode_data(packet+ETHER_HDR_LEN+sizeof(struct ip_hdr)+tcp_header_length, datasize);
 
       printNflowPacketHeader(nfh);
       printNflowPacketBody(nfb);
