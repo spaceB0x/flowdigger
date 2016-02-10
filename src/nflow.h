@@ -146,3 +146,15 @@ void printNflowPacketBody(struct nf_v5_body *nfpacket){
       printf("\t\t*** dst_mask:%d \n",nfpacket->dst_mask);
       printf("\t\t*** pad2:%d \n",nfpacket->pad2);
 };
+
+void printHelpMenu(){
+  printf("\t*******************************\n");
+  printf("\tFlowdigger Help\n\n");
+  printf("\tParameters:\n");
+  printf("\t\t-a <ip address>          ipaddress of target collector-required\n");
+  printf("\t\t-i <network interface>   interface from which to collect traffic-required\n");
+  printf("\t\t-p <port>                port of target collector (where flowdata is sent)-required\n");
+  printf("\t\t-d                       flag that turns on Header extraction or 'digging'\n\n");
+  printf("\tExample Usage:\n");
+  printf("\t\t./flowdigger -a 10.0.0.1 -p 8080 -i eth0 -d\n");
+};

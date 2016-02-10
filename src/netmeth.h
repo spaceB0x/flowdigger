@@ -5,6 +5,15 @@
 #define ETHER_HDR_LEN 14
 #define EMPTY_FLAGS 0x00
 
+/* method declarations */
+void pcap_fatal(const char *, const char *);
+int getepoch();
+void decode_ethernet(const u_char *);
+void decode_ip(const u_char *, struct nf_v5_body *);
+u_int decode_tcp(const u_char *,struct nf_v5_body *,u_int *);
+void decode_data(const u_char *, int);
+
+
 /* Redefinitions of network header structures (because I'm dumb and the real ones make my brain hurt)*/
 /* Ethernet Header */
 struct ether_hdr{
@@ -81,3 +90,79 @@ void dump(const unsigned char *data_buffer, const unsigned int length) {
 int getepoch(){
   return (int)time(NULL);
 }
+
+/* --- Protocol Decoding functions --- */
+/* Decode Ethernet */
+void decode_ethernet(const u_char *header_start) {
+   printf("Successfully decoded ethr_hdr\n");
+};
+
+/* Decode IP */
+void decode_ip(const u_char *header_start, struct nf_v5_body *nfbody) {
+     const struct ip_hdr *ip_header;
+     struct nf_v5_body *nf_body;
+     // Set local variables
+     ip_header = (const struct ip_hdr *)header_start;
+     nf_body = (struct nf_v5_body *)nfbody;
+
+     printf("\tDecoding IP layer...\n");
+     nf_body->ip_src_address = htonl(ip_header->src); //assign source IP
+     nf_body->ip_dst_address = htonl(ip_header->dst); //assign destination IP
+     nf_body->dOctets = htonl(ip_header->tl);            // assign bytes of flow
+     nf_body->prot = ip_header->prot;             //assign protocol
+  };
+
+/* Decode TCP */
+u_int decode_tcp(const u_char *header_start,struct nf_v5_body *nfbody, u_int *extractor) {
+     u_int header_size;
+     const struct tcp_hdr *tcp_header;
+     struct nf_v5_body *nf_body;
+     unsigned char flags;
+
+     // Set local variables
+     tcp_header = (const struct tcp_hdr *)header_start;
+     nf_body = (struct nf_v5_body *)nfbody;
+     flags = EMPTY_FLAGS;
+     header_size = 4 * tcp_header->off;
+     printf("\t\tDecoding TCP layer....\n");
+     nf_body->sport = htons(tcp_header->sport); //assign source port
+     nf_body->dport = htons(tcp_header->dport); //assign destination port
+
+     //bitwise OR all TCP flags together
+     if(tcp_header->tcp_flags & TCP_FIN)
+        flags |= TCP_FIN;
+     if(tcp_header->tcp_flags & TCP_SYN)
+        flags |= TCP_SYN;
+     if(tcp_header->tcp_flags & TCP_RST)
+        flags |= TCP_RST;
+     if(tcp_header->tcp_flags & TCP_PUSH)
+        flags |= TCP_PUSH;
+     if(tcp_header->tcp_flags & TCP_ACK)
+        flags |= TCP_ACK;
+     if(tcp_header->tcp_flags & TCP_URG)
+        flags |= TCP_URG;
+
+     nf_body->tcp_flags = flags;    //assign OR of TCP flags
+     return header_size;
+};
+
+void decode_data(const u_char *header_start, int size){
+    char *xstring = "X-Forwarded-For:" ;
+    char *string;
+
+    printf("\t\t\tDecoding data payload....\n");
+    int bytes_to_read, read_bytes;
+    read_bytes=0;
+    bytes_to_read = size;
+    char data[size];
+    printf("bytes to read: %d", bytes_to_read);
+    while(bytes_to_read > 0){
+
+        data[read_bytes] = *header_start;
+        read_bytes -=1;
+        header_start+=1;
+        bytes_to_read -= 1;
+
+    }
+    printf("\n");
+};
