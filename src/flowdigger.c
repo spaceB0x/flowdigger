@@ -29,7 +29,6 @@ struct paramPassStruct{
     u_int *extractor;
 };
 
-
 /*#######################*/
       /* main */
 /*#######################*/
@@ -38,6 +37,7 @@ int main(int argc, char *argv[]){
     /* Initiate configurations*/
     struct config conf= set_config_from_file(config_file_path);
     print_config(&conf);
+
     /* Initiate packet sniffing values/types/structs */
     struct pcap_pkthdr header;      //actual pcap struct
     struct nf_v5_body nfbody;       //netflow body struct
@@ -70,15 +70,26 @@ int main(int argc, char *argv[]){
     initializeNflowPacketHeader(p_nfheader,tm);
     initializeNflowPacketBody(p_nfbody);
 
-    /* Initialize any regex */
+    /* Compile REGEX items */
     const char * regex_text;                          //regex string
-    //regex_t r_ip = "hello";
-    const char *xff = "X-Forwarded-For";              //x
-    const char *tcip= "True-Client-IP";
-    if(conf.proxy_ip != NULL){
-      regex_text = conf.proxy_ip;
+    const char * xff;
+    const char * tcip;
+    regex_t r_xff;
+    regex_t r_tcip;
+    //xff= "(?<=\<X-Forwarded-For:\>)\s?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"; //x-forwarded-for regex
+    tcip= "(?<=\bTrue-Client-IP:\b)[[:space:]]?([[:digit:]]{1,3}[:punct:].[[:digit:]]{1,3}[:punct:].[[:digit:]]{1,3}[:punct:].[[:digit:]]{1,3})"; //True-Client-IP regex
+    xff= "(?<=\bX-Forwarded-For:\b)[[:space:]]?([[:digit:]]{1,3}[:punct:].[[:digit:]]{1,3}[:punct:].[[:digit:]]{1,3}[:punct:].[[:digit:]]{1,3})"; //True-Client-IP regex
 
-    } //initialize regular expressions
+
+    if(compile_regex(&r_tcip, tcip) == 0){
+        printf("Compilation successful\r\n");
+    }
+
+    if(compile_regex(&r_xff, xff) == 0){
+      printf("Compilation successful\r\n");
+    }
+
+    //if(conf.proxy_ip != NULL){}
 
     /* Choose sniffing device */
     if(device == NULL)

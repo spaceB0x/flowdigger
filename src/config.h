@@ -55,6 +55,7 @@ struct config set_config_from_file(const char *filename){
           conf.proxy_ip= malloc(strlen(cfline));
           strcpy(conf.proxy_ip, cfline);
           }
+        else{conf.proxy_ip = NULL;}
         }
 
         i++;
